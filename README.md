@@ -39,7 +39,7 @@ node 'squid1.example.com' {
 ```puppet
 node 'squid1.example.com': {
     class { 'squid::wpad':
-        server_alises => ['wpad.squid1.example.com'];
+        server_aliases => ['wpad.squid1.example.com'];
     }
 }
 ```
