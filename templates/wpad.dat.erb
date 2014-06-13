@@ -1,0 +1,29 @@
+function FindProxyForURL(url, host) {
+
+// Never proxy RFC1918 or localnet
+
+	if (	isPlainHostName(host) ||
+				shExpMatch(host, "*.local") ||
+				shExpMatch(host, "*.dc1.example.com") ||
+				shExpMatch(host, "*.dc2.example.com") ||
+				isInNet(dnsResolve(host), "10.0.0.0", "255.0.0.0") ||
+				isInNet(dnsResolve(host), "172.16.0.0",  "255.240.0.0") ||
+				isInNet(dnsResolve(host), "192.168.0.0",  "255.255.0.0") ||
+				isInNet(dnsResolve(host), "127.0.0.0", "255.255.255.0"))
+				return "DIRECT";
+
+// If I'm in DC1 or DC2, send to a specific proxy.
+// DC1 IPs originate from 10.1.0.0/16
+// DC2 IPs originate from 10.2.0.0/16
+
+	if (isInNet(myIpAddress(), "10.1.0.0", "255.255.0.0")) {
+		return "PROXY proxy.dmz.dc1.example.com:3128";
+	} else if (isInNet(myIpAddress(), "10.2.0.0", "255.255.0.0")) {
+		return "PROXY proxy.dmz.dc2.example.com:3128";
+	} else {
+		return "DIRECT";
+	}
+
+// Default:  Do not proxy
+
+}

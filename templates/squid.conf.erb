@@ -1,0 +1,79 @@
+# Squid normally listens to port 3128
+http_port 3128
+
+# Leave coredumps in the first cache dir
+coredump_dir /var/spool/<%= squid %>
+
+# Adding for Arcsight
+logformat squid %ts.%03tu %6tr %>a %Ss/%<Hs %<st %rm %ru %un %Sh/%<A %mt
+
+########################################
+#### ACL's added by OpSec (:tinfoil) ###
+########################################
+
+acl manager proto cache_object
+acl localhost src 127.0.0.1/32 ::1
+acl global_allow_domains  dstdomain "/etc/<%= squid %>/global_allow_domains.txt"
+acl global_allow_subnets  dst "/etc/<%= squid %>/global_allow_subnets.txt"
+acl global_deny_subnets dst "/etc/<%= squid %>/global_deny_subnets.txt"
+acl global_deny_domains dstdomain "/etc/<%= squid %>/global_deny_domains.txt"
+acl safe_ports port 21 80 443 873 8000 9418
+acl ssl_ports port 443 873 9418
+acl connect method CONNECT
+acl example_com_internal src 10.0.0.0/8 127.0.0.1 ::1
+
+# This is to recognise X-Forarded-For for Source IP
+# But we only recognise the header from specific hosts (mainly load balancers)
+acl example_com_dmz src 10.0.1.0/24 10.0.2.0/24
+follow_x_forwarded_for allow example_com_dmz
+
+# This is where the ACL's get applied in order
+
+# Deny anything not from an internal subnet
+http_access deny !example_com_internal
+
+# Deny anything not going to specific destination ports
+http_access deny connect !ssl_ports
+http_access deny !safe_ports
+
+# Allow management only from localhost (we can change this later)
+http_access allow manager localhost
+http_access deny manager
+
+# Global allow destinations here
+http_access allow global_allow_domains
+http_access allow global_allow_subnets
+
+# Global deny destinations here
+http_access deny global_deny_subnets
+http_access deny global_deny_domains
+
+# Specific ACLs here
+
+<%# Iterate through all the ACL's if any -%>
+<% acls.keys.sort.each do |bugid| -%>
+<%# If there are no source ip's, no point to an ACL -%>
+<% if acls[bugid]['source_ips'].to_a.length > 0 -%>
+<%# If there are no destinations, there is no point to an ACL either -%>
+<% if (acls[bugid]['dest_ips'].to_a.length + acls[bugid]['dest_names'].to_a.length) > 0 -%>
+# ACL's for http://bugzilla.example.com/<%= bugid %>
+# -- <%= acls[bugid]['description'] || "No Description Set" %>
+acl src_<%= bugid %> src "/etc/<%= squid %>/acls/<%= bugid %>/source_ips.txt"
+<%# If there is no destination ips, don't create the ACL for them -%>
+<% if acls[bugid]['dest_ips'].to_a.length > 0 -%>
+acl dst_<%= bugid %> dst "/etc/<%= squid %>/acls/<%= bugid %>/dest_ips.txt"
+http_access allow src_<%= bugid %> dst_<%= bugid %>
+<% end -%>
+<%# If there is no destination names, don't create the ACL for them -%>
+<% if acls[bugid]['dest_names'].to_a.length > 0 -%>
+acl dstdomain_<%= bugid %> dstdomain "/etc/<%= squid %>/acls/<%= bugid %>/dest_names.txt"
+http_access allow src_<%= bugid %> dstdomain_<%= bugid %>
+<% end -%>
+# End specific ACL's for http://bugzilla.example.com/<%= bugid %>
+
+<% end -%>
+<% end -%>
+<% end -%>
+
+# Deny the rest
+http_access deny all

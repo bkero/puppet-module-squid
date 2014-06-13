@@ -1,0 +1,14 @@
+AddType application/x-ns-proxy-autoconfig .pac
+AddType application/x-ns-proxy-autoconfig .dat
+
+<VirtualHost *:80>
+    ServerName proxy.<%= scope.lookupvar('::domain') %>
+    ServerAlias *
+    DocumentRoot /var/www/html/wpad
+    <Directory "/var/www/html/wpad">
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Order allow,deny
+        Allow from all
+    </Directory>
+</VirtualHost>
