@@ -4,6 +4,14 @@ puppet-module-squid
 Mozilla IT's Squid module
 This is the Squid puppet module used by Mozilla's IT team.
 
+Optional parameters:
+    safe_ports: an array of port numbers to consider safe (Default: [])
+    global_allow_domains: an array of domains to allow (Default: [])
+    global_deny_domains:  an array of domains to deny (Default: [])
+    global_allow_subnets: an array of subnets to allow (Default: [])
+    global_deny_subnets:  an array of subnets to deny (Default: [])
+    acls: A hash of ACL entries, (Default: {})
+
 Example usage:
 node 'squid1.example.com' {
     class { 'squid':
