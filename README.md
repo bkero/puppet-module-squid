@@ -13,6 +13,7 @@ Optional parameters:
     acls: A hash of ACL entries, (Default: {})
 
 Example usage:
+```puppet
 node 'squid1.example.com' {
     class { 'squid':
         acls => {
@@ -33,10 +34,13 @@ node 'squid1.example.com' {
         }
     }
 }
+```
 
 Example wpad usage:
+```puppet
 node 'squid1.example.com': {
     class { 'squid::wpad':
         server_alises => ['wpad.squid1.example.com'];
     }
 }
+```
