@@ -1,8 +1,6 @@
 puppet-module-squid
 ===================
 
-#Mozilla IT's Squid module
-
 This is the Squid puppet module used by Mozilla's IT team.
 
 ##Optional parameters:
